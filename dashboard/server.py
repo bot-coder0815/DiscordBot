@@ -13,6 +13,9 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from itsdangerous import URLSafeSerializer
 
+from services.ticket.config import TicketConfig
+_ticket_config = TicketConfig.get_instance()
+
 from dashboard.auth import (
     CODE_EXPIRE,
     create_login_code,
@@ -47,7 +50,7 @@ def _load_role_config() -> dict:
 
 def _load_tickets() -> dict:
     try:
-        with open("tickets.json", "r", encoding="utf-8") as f:
+        with open(_ticket_config.files.tickets_data, "r", encoding="utf-8") as f:
             data = json.load(f)
             if isinstance(data, dict):
                 return data
@@ -57,7 +60,7 @@ def _load_tickets() -> dict:
 
 
 def _save_tickets(data: dict) -> None:
-    with open("tickets.json", "w", encoding="utf-8") as f:
+    with open(_ticket_config.files.tickets_data, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
 
@@ -175,7 +178,7 @@ async def _close_and_cleanup_dashboard(client: discord.Bot, channel_id: int) -> 
     channel = get_channel(client, channel_id)
     if channel:
         try:
-            await channel.send("📝 Ticket closed via Dashboard.")
+            await channel.send(_ticket_config.messages.dashboard_close)
             await asyncio.sleep(1)
             await channel.delete()
         except Exception:

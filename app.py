@@ -507,7 +507,10 @@ async def on_member_join(member: discord.Member):
 #------
 #Ticket System:
 
-TICKET_FILE = "tickets.json"
+from services.ticket.config import TicketConfig
+_ticket_config = TicketConfig.get_instance()
+
+TICKET_FILE = _ticket_config.files.tickets_data
 
 def _load_tickets():
     try:
@@ -569,7 +572,7 @@ def _get_ticket_category_role_ids(category_key):
     return role_ids
 
 
-TRANSCRIPTS_DIR = "transcripts"
+TRANSCRIPTS_DIR = _ticket_config.files.transcripts_dir
 
 
 def _escape_md(text):
@@ -659,7 +662,7 @@ async def _close_and_cleanup(channel, ticket_key, closed_by):
             num = data.get("ticket_number", "")
             num_str = f"-{num}" if num else ""
             fname = f"transcript{num_str}-{channel.name}-{now_dt.strftime('%Y%m%d-%H%M%S')}.md"
-            desc = f"Ticket Transcript – {channel.name}{num_str}"
+            desc = _ticket_config.messages.transcript_gist_description.format(channel_name=channel.name) + num_str
             url = _create_gist(md, fname, desc)
             user = client.get_user(int(data["user_id"]))
             if user:
@@ -690,15 +693,16 @@ async def _close_and_cleanup(channel, ticket_key, closed_by):
     except Exception as e:
         print(f"Error creating transcript: {e}")
 
+    c = _ticket_config
     embed = discord.Embed(
-        title="Closing Ticket",
-        description="This ticket will be deleted in 5 seconds.",
-        color=discord.Color.red(),
+        title=c.closing_embed.title,
+        description=c.closing_embed.description,
+        color=c.closing_embed.color,
         timestamp=datetime.now()
     )
     try:
         await channel.send(embed=embed)
-        await asyncio.sleep(5)
+        await asyncio.sleep(c.timings.delete_delay_seconds)
         await channel.delete()
     except Exception as e:
         print(f"Error deleting ticket channel: {e}")
@@ -708,7 +712,12 @@ class TicketCreateView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    @discord.ui.button(label="Create Ticket", style=discord.ButtonStyle.primary, emoji="🎫", custom_id="persistent:ticket_create")
+    @discord.ui.button(
+        label=_ticket_config.create_ticket_button.label,
+        style=getattr(discord.ButtonStyle, _ticket_config.create_ticket_button.style),
+        emoji=_ticket_config.create_ticket_button.emoji,
+        custom_id=_ticket_config.create_ticket_button.custom_id,
+    )
     async def create_ticket(self, button: discord.ui.Button, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
 
@@ -730,7 +739,10 @@ class TicketCreateView(discord.ui.View):
             return
 
         ticket_number = _get_next_ticket_number()
-        channel_name = f"ticket-{interaction.user.name.lower().replace(' ', '-')}-{ticket_number}"
+        channel_name = _ticket_config.channel.naming_pattern.format(
+            name=interaction.user.name.lower().replace(" ", "-"),
+            number=ticket_number,
+        )
 
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(view_channel=False),
@@ -766,20 +778,21 @@ class TicketCreateView(discord.ui.View):
         }
         _save_tickets(tickets)
 
+        c = _ticket_config.ticket_created_embed
         embed = discord.Embed(
-            title="Ticket Created",
-            description=f"Hello {interaction.user.mention}!\nA team member will take care of you shortly.\n\nPlease describe your issue as accurately as possible.",
-            color=discord.Color.green(),
+            title=c.title,
+            description=c.format_description(user_mention=interaction.user.mention),
+            color=c.color,
             timestamp=datetime.now()
         )
-        embed.set_footer(text=f"{BOT_NAME} - Ticket System")
+        embed.set_footer(text=c.format_footer(bot_name=BOT_NAME))
 
         close_view = TicketCloseView()
         await channel.send(f"{interaction.user.mention}", embed=embed, view=close_view)
 
         categories = _load_ticket_categories()
         if categories:
-            msg = await channel.send("📋 **Please select a topic for your ticket:**")
+            msg = await channel.send(_ticket_config.channel.category_select_prompt)
             cat_view = TicketCategorySelectView(categories, msg, int(user_id))
             await msg.edit(view=cat_view)
 
@@ -797,7 +810,7 @@ class TicketCategorySelect(discord.ui.Select):
                 value=key,
             ))
         super().__init__(
-            placeholder="Select a topic...",
+            placeholder=_ticket_config.channel.category_select_placeholder,
             min_values=1, max_values=1,
             options=options,
         )
@@ -839,12 +852,15 @@ class TicketCategorySelect(discord.ui.Select):
             (c["label"] for c in _load_ticket_categories().values() if c.get("label")),
             category_key,
         )
-        await interaction.followup.send(f"Topic set to **{cat_label}**!", ephemeral=True)
+        await interaction.followup.send(
+            _ticket_config.messages.topic_set.format(label=cat_label),
+            ephemeral=True,
+        )
 
 
 class TicketCategorySelectView(discord.ui.View):
     def __init__(self, categories, msg, owner_id):
-        super().__init__(timeout=300)
+        super().__init__(timeout=_ticket_config.channel.category_select_timeout_seconds)
         self.msg = msg
         self.owner_id = owner_id
         if categories:
@@ -858,9 +874,7 @@ class TicketCategorySelectView(discord.ui.View):
         user = client.get_user(self.owner_id)
         if user:
             try:
-                await user.send(
-                    "Please select a topic for your ticket using the dropdown in the ticket channel, or ask a staff member to set it."
-                )
+                await user.send(_ticket_config.channel.category_select_timeout_dm)
             except:
                 pass
 
@@ -869,7 +883,12 @@ class TicketCloseView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    @discord.ui.button(label="Close Ticket", style=discord.ButtonStyle.danger, emoji="🔒", custom_id="persistent:ticket_close")
+    @discord.ui.button(
+        label=_ticket_config.close_ticket_button.label,
+        style=getattr(discord.ButtonStyle, _ticket_config.close_ticket_button.style),
+        emoji=_ticket_config.close_ticket_button.emoji,
+        custom_id=_ticket_config.close_ticket_button.custom_id,
+    )
     async def close_ticket(self, button: discord.ui.Button, interaction: discord.Interaction):
         ticket_key = str(interaction.channel_id)
         tickets = _load_tickets()
@@ -892,7 +911,7 @@ class TicketCloseView(discord.ui.View):
         await _close_and_cleanup(interaction.channel, ticket_key, interaction.user.id)
 
 
-INACTIVITY_LIMIT = 48 * 3600
+INACTIVITY_LIMIT = _ticket_config.inactivity.limit_seconds
 
 ticket = discord.SlashCommandGroup("ticket", "Ticket system commands")
 
@@ -905,12 +924,13 @@ async def panel(ctx):
         await ctx.respond("Ticket category not configured. Set TICKET_CATEGORY_ID in .env.", ephemeral=True)
         return
 
+    c = _ticket_config.panel_embed
     embed = discord.Embed(
-        title="Ticket System",
-        description="Click **Create Ticket** to open a new ticket.\n\nA team member will then take care of your request.",
-        color=discord.Color.blue()
+        title=c.title,
+        description=c.description,
+        color=c.color,
     )
-    embed.set_footer(text=f"{BOT_NAME} - Ticket System")
+    embed.set_footer(text=c.format_footer(bot_name=BOT_NAME))
 
     view = TicketCreateView()
     await ctx.respond(embed=embed, view=view)
@@ -992,9 +1012,13 @@ client.add_application_command(ticket)
 
 
 async def _ticket_inactivity_check():
+    cfg = _ticket_config.inactivity
+    if not cfg.enabled:
+        return
+
     await client.wait_until_ready()
     while not client.is_closed():
-        await asyncio.sleep(1800)
+        await asyncio.sleep(cfg.check_interval_seconds)
         tickets = _load_tickets()
         now_dt = datetime.now(GERMAN_TZ)
         now_ts = now_dt.timestamp()
@@ -1027,18 +1051,12 @@ async def _ticket_inactivity_check():
                 warned = data.get("auto_close_warned", {})
                 user_mention = f"<@{data['user_id']}>"
 
-                if remaining_hours <= 0.167 and not warned.get("10m"):
-                    await channel.send(f"{user_mention} Your ticket will be closed in **10 minutes** due to inactivity.")
-                    data.setdefault("auto_close_warned", {})["10m"] = True
-                    changed = True
-                elif remaining_hours <= 1 and not warned.get("1h"):
-                    await channel.send(f"{user_mention} Your ticket will be closed in **1 hour** due to inactivity.")
-                    data.setdefault("auto_close_warned", {})["1h"] = True
-                    changed = True
-                elif remaining_hours <= 4 and not warned.get("4h"):
-                    await channel.send(f"{user_mention} Your ticket will be closed in **4 hours** due to inactivity.")
-                    data.setdefault("auto_close_warned", {})["4h"] = True
-                    changed = True
+                for w in sorted(cfg.warnings, key=lambda x: x.threshold_hours, reverse=True):
+                    if remaining_hours <= w.threshold_hours and not warned.get(w.key):
+                        await channel.send(f"{user_mention} {w.message}")
+                        data.setdefault("auto_close_warned", {})[w.key] = True
+                        changed = True
+                        break
 
         if changed:
             _save_tickets(tickets)

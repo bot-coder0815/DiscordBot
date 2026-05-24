@@ -1,0 +1,64 @@
+{
+  "files": {
+    "tickets_data": "tickets.json",
+    "transcripts_dir": "transcripts"
+  },
+  "inactivity": {
+    "enabled": true,
+    "check_interval_seconds": 1800,
+    "limit_seconds": 172800,
+    "warnings": [
+      { "threshold_hours": 4, "key": "4h", "message": "Your ticket will be closed in **4 hours** due to inactivity." },
+      { "threshold_hours": 1, "key": "1h", "message": "Your ticket will be closed in **1 hour** due to inactivity." },
+      { "threshold_hours": 0.167, "key": "10m", "message": "Your ticket will be closed in **10 minutes** due to inactivity." }
+    ]
+  },
+  "channel": {
+    "naming_pattern": "ticket-{name}-{number}",
+    "category_select_timeout_seconds": 300,
+    "category_select_placeholder": "Select a topic...",
+    "category_select_prompt": "📋 **Please select a topic for your ticket:**",
+    "category_select_timeout_dm": "Please select a topic for your ticket using the dropdown in the ticket channel, or ask a staff member to set it."
+  },
+  "embeds": {
+    "panel": {
+      "title": "Ticket System",
+      "description": "Click **Create Ticket** to open a new ticket.\n\nA team member will then take care of your request.",
+      "color": "#3498db",
+      "footer": "{bot_name} - Ticket System"
+    },
+    "ticket_created": {
+      "title": "Ticket Created",
+      "description": "Hello {user.mention}!\nA team member will take care of you shortly.\n\nPlease describe your issue as accurately as possible.",
+      "color": "#2ecc71",
+      "footer": "{bot_name} - Ticket System"
+    },
+    "closing": {
+      "title": "Closing Ticket",
+      "description": "This ticket will be deleted in 5 seconds.",
+      "color": "#e74c3c"
+    }
+  },
+  "buttons": {
+    "create_ticket": {
+      "label": "Create Ticket",
+      "emoji": "🎫",
+      "custom_id": "persistent:ticket_create",
+      "style": "primary"
+    },
+    "close_ticket": {
+      "label": "Close Ticket",
+      "emoji": "🔒",
+      "custom_id": "persistent:ticket_close",
+      "style": "danger"
+    }
+  },
+  "messages": {
+    "topic_set": "Topic set to **{label}**!",
+    "dashboard_close": "📝 Ticket closed via Dashboard.",
+    "transcript_gist_description": "Ticket Transcript – {channel_name}"
+  },
+  "timings": {
+    "delete_delay_seconds": 5
+  }
+}
