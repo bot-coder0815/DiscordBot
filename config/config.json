@@ -1,0 +1,11 @@
+{
+  "default_target_language": "en",
+  "cache_enabled": true,
+  "cache_max_size": 500,
+  "cooldown_seconds": 5,
+  "max_text_length": 15000,
+  "request_timeout": 15,
+  "max_retries": 3,
+  "retry_delay": 1.0,
+  "service_urls": ["translate.googleapis.com"]
+}

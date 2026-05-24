@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">📄 Logs</h1>
+
+<div class="toolbar">
+  <select id="logFile" onchange="location.href='/logs?file='+encodeURIComponent(this.value)">
+    {% for f in log_files %}
+    <option value="{{ f }}" {% if f == selected_file %}selected{% endif %}>{{ f }}</option>
+    {% endfor %}
+  </select>
+  <input type="text" class="search-input" id="logSearch" placeholder="Search in logs..." oninput="filterLogs(this.value)">
+</div>
+
+<div class="card">
+  <pre id="logContent">{{ content }}</pre>
+</div>
+
+<script>
+function filterLogs(query) {
+  const pre = document.getElementById('logContent');
+  const lines = pre.textContent.split('\n');
+  if (!query) {
+    pre.textContent = '{{ content | e }}'.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+    return;
+  }
+  const filtered = lines.filter(l => l.toLowerCase().includes(query.toLowerCase()));
+  pre.textContent = filtered.join('\n') || 'No matches found.';
+}
+</script>
+{% endblock %}

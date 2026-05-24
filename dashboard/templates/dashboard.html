@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">
+  {% if lang == 'de' %}Dashboard{% else %}Dashboard{% endif %}
+</h1>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-value">{{ stats.guild_count }}</div>
+    <div class="stat-label">{% if lang == 'de' %}Server{% else %}Servers{% endif %}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ stats.total_members }}</div>
+    <div class="stat-label">{% if lang == 'de' %}Mitglieder{% else %}Members{% endif %}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">{{ open_tickets }}</div>
+    <div class="stat-label">{% if lang == 'de' %}Offene Tickets{% else %}Open Tickets{% endif %}</div>
+    <div class="stat-sub">{{ total_tickets }} {% if lang == 'de' %}gesamt{% else %}total{% endif %}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">
+      {% if stats.uptime > 86400 %}
+        {{ (stats.uptime / 86400)|int }}d
+      {% elif stats.uptime > 3600 %}
+        {{ (stats.uptime / 3600)|int }}h
+      {% else %}
+        {{ (stats.uptime / 60)|int }}m
+      {% endif %}
+    </div>
+    <div class="stat-label">{% if lang == 'de' %}Uptime{% else %}Uptime{% endif %}</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2 style="font-size:18px;margin-bottom:16px;">
+    {% if lang == 'de' %}Server Übersicht{% else %}Server Overview{% endif %}
+  </h2>
+  <table>
+    <thead>
+      <tr>
+        <th>{% if lang == 'de' %}Server{% else %}Server{% endif %}</th>
+        <th>ID</th>
+        <th>{% if lang == 'de' %}Mitglieder{% else %}Members{% endif %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for g in stats.guilds %}
+      <tr>
+        <td>{{ g.name }}</td>
+        <td style="font-family:monospace;font-size:12px;color:var(--text-muted);">{{ g.id }}</td>
+        <td>{{ g.members }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

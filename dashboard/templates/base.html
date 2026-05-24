@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html data-theme="{{ theme }}">
+<head>
+  <title>GlazeSMP – Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">GlazeSMP – Dashboard</span>
+      </div>
+      <div class="sidebar-nav">
+        <div class="dropdown">
+          <div class="dropdown-btn">📁 Admin</div>
+          <div class="dropdown-content">
+            <a href="/dashboard">📋 {% if lang == 'de' %}Dashboard{% else %}Dashboard{% endif %}</a>
+            <a href="/tickets">🎫 {% if lang == 'de' %}Tickets{% else %}Tickets{% endif %}</a>
+            <a href="/logs">📄 {% if lang == 'de' %}Logs{% else %}Logs{% endif %}</a>
+            <a href="/config">⚙️ {% if lang == 'de' %}Konfiguration{% else %}Config{% endif %}</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-user">
+        <div class="user-info-row">
+          <img src="{{ user_avatar }}" alt="" class="user-avatar" onerror="this.style.display='none'">
+          <div class="user-info">
+            <span class="user-name">{{ user_display_name }}</span>
+            <span class="user-role">Staff</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">
+            {% if theme == 'dark' %}🌙{% else %}☀️{% endif %}
+          </button>
+          <a href="/logout" style="font-size:16px;text-decoration:none;color:var(--text-muted);" title="Logout">🚪</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <script>
+    async function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      document.getElementById('themeBtn').textContent = next === 'dark' ? '🌙' : '☀️';
+      try {
+        await fetch('/api/session/theme', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({theme: next})
+        });
+      } catch(e) {}
+    }
+  </script>
+</body>
+</html>

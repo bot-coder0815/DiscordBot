@@ -1,0 +1,76 @@
+{
+  "roles": {
+    "owner": [1500538272735035664],
+    "dev": [1500538909309014016],
+    "manager": [1500905394900570213],
+    "sr-admin": [1500906235178782751],
+    "admin": [1500909001637101588],
+    "sr-mod": [1500909718153990196],
+    "mod": [1500910465918832760],
+    "sr-helper": [1500912194811068548],
+    "helper": [1500912458955755760],
+    "media": [1500538718019260687],
+    "dd": [1500530846543908874],
+    "md": [1500923994902106303],
+    "vip": [1500538781726675085],
+    "member": [1500538468902895806],
+    "app": [1502642359337226350]
+  },
+  "commands": {
+    "ticket": ["admin", "owner", "manager", "sr-admin", "dev"],
+    "ticket_staff": ["admin", "owner", "manager", "sr-admin", "dev", "sr-mod", "mod"],
+    "say": ["admin", "owner", "manager", "sr-admin", "dev"],
+    "warn": ["admin", "mod", "owner", "manager", "sr-admin", "sr-mod"],
+    "roleall": ["dev"],
+    "default": ["member"]
+  },
+  "prefixes": {
+    "owner": "[ᴏᴡɴᴇʀ]",
+    "dev": "[ᴅᴇᴠ]",
+    "manager": "[ᴍᴀɴᴀɢᴇʀ]",
+    "sr-admin": "[ꜱʀ-ᴀᴅᴍɪɴ]",
+    "admin": "[ᴀᴅᴍɪɴ]",
+    "sr-mod": "[ꜱʀ-ᴍᴏᴅ]",
+    "mod": "[ᴍᴏᴅ]",
+    "sr-helper": "[ꜱʀ-ʜᴇʟᴘᴇʀ]",
+    "helper": "[ʜᴇʟᴘᴇʀ]",
+    "dd": "[ᴅᴅ]",
+    "md": "[ᴍᴅ]",
+    "media": "[ᴍᴇᴅɪᴀ]",
+    "vip": "[ᴠɪᴘ]",
+    "app": "[ᴀᴘᴘ]"
+  },
+  "ticket_categories": {
+    "support": {
+      "label": "Technical Support",
+      "description": "Plugins, server issues, setup help",
+      "emoji": "🛠️",
+      "roles": ["admin", "dev", "sr-admin"]
+    },
+    "connect": {
+      "label": "Login & Server Connect",
+      "description": "Can't connect, login issues, server offline",
+      "emoji": "🔌",
+      "roles": ["admin", "dev", "sr-admin"]
+    },
+    "report": {
+      "label": "Report a User",
+      "description": "Report rule violations or bad behavior",
+      "emoji": "🚨",
+      "roles": ["admin", "sr-mod", "mod"]
+    },
+    "general": {
+      "label": "General",
+      "description": "Everything else",
+      "emoji": "📝",
+      "roles": ["admin", "mod", "sr-mod"]
+    }
+  },
+  "auto_role": {
+    "enabled": true,
+    "role_ids": [
+      1500538468902895806,
+      1493325108465635570
+    ]
+  }
+}

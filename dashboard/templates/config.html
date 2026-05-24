@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">⚙️ Config</h1>
+
+<div class="toolbar">
+  <select id="configFile" onchange="location.href='/config?file='+encodeURIComponent(this.value)">
+    {% for f in config_files %}
+    <option value="{{ f }}" {% if f == selected_file %}selected{% endif %}>{{ f }}</option>
+    {% endfor %}
+  </select>
+</div>
+
+<div class="card">
+  <pre id="configContent">{{ content }}</pre>
+</div>
+{% endblock %}

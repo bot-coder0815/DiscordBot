@@ -1,0 +1,15 @@
+services:
+  bot:
+    build: .
+    container_name: devcoder-privat-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "6062:6062"
+    volumes:
+      - ./logs:/app/logs
+      - ./transcripts:/app/transcripts
+      - ./dashboard/dashboard.db:/app/dashboard/dashboard.db
+      - ./tickets.json:/app/tickets.json
+      - ./daily_message_status.json:/app/daily_message_status.json

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html data-theme="dark">
+<head>
+  <title>GlazeSMP – Login</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body class="login-page">
+  <div class="login-card">
+    <h1>GlazeSMP – Dashboard</h1>
+    <p>Enter your login code from Discord to continue.</p>
+
+    {% if error %}
+    <div class="error-msg">{{ error }}</div>
+    {% endif %}
+
+    <div class="lang-selector">
+      {% for lc, ln in LANG_NAMES.items() %}
+      <button class="lang-btn {% if lang == lc %}active{% endif %}" onclick="setLang('{{ lc }}')">{{ ln }}</button>
+      {% endfor %}
+    </div>
+
+    <form method="POST" action="/login">
+      <input type="hidden" name="lang" id="lang-input" value="{{ lang }}">
+      <div class="form-group">
+        <label>{% if lang == 'de' %}6-stelliger Code{% else %}6-digit Code{% endif %}</label>
+        <input type="text" name="code" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" value="{{ code }}" placeholder="000000" required>
+      </div>
+      <button type="submit" class="btn-login">
+        {% if lang == 'de' %}Anmelden{% else %}Sign In{% endif %}
+      </button>
+    </form>
+
+    <p style="margin-top:16px;font-size:12px;color:var(--text-muted);text-align:center;">
+      {% if lang == 'de' %}
+      Code ist {{ code_expire }} Minuten gültig. Nutze <code>/webapp</code> in Discord.
+      {% else %}
+      Code expires in {{ code_expire }} minutes. Use <code>/webapp</code> in Discord.
+      {% endif %}
+    </p>
+
+    <div style="display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--text-muted);font-size:13px;">
+      <span style="flex:1;height:1px;background:var(--border);"></span>
+      {% if lang == 'de' %}oder{% else %}or{% endif %}
+      <span style="flex:1;height:1px;background:var(--border);"></span>
+    </div>
+
+    <a href="/guest" style="display:block;width:100%;padding:12px;text-align:center;border:1px solid var(--border);border-radius:8px;color:var(--text-primary);text-decoration:none;font-size:14px;">
+      {% if lang == 'de' %}Als Gast fortfahren{% else %}Continue as Guest{% endif %}
+    </a>
+  </div>
+
+  <script>
+    function setLang(lang) {
+      document.getElementById('lang-input').value = lang;
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>

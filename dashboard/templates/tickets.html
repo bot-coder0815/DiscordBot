@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">🎫 Tickets</h1>
+
+<div class="toolbar">
+  <button class="filter-btn {% if filter == 'open' %}active{% endif %}" onclick="location.href='/tickets?filter=open'">
+    Open ({{ total_open }})
+  </button>
+  <button class="filter-btn {% if filter == 'closed' %}active{% endif %}" onclick="location.href='/tickets?filter=closed'">
+    Closed ({{ total_closed }})
+  </button>
+  <button class="filter-btn {% if filter == 'all' %}active{% endif %}" onclick="location.href='/tickets?filter=all'">
+    All
+  </button>
+</div>
+
+<div class="card" style="padding:0;">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Category</th>
+        <th>User ID</th>
+        <th>Created</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in tickets %}
+      <tr>
+        <td style="font-weight:600;">{{ t.ticket_number }}</td>
+        <td>{{ t.category or '—' }}</td>
+        <td style="font-family:monospace;font-size:12px;">{{ t.user_id }}</td>
+        <td style="font-size:12px;color:var(--text-muted);">
+          {% if t.created_at %}
+            {{ t.created_at[:10] }} {{ t.created_at[11:16] }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          {% if t.closed %}
+            <span class="badge badge-closed">Closed</span>
+          {% else %}
+            <span class="badge badge-open">Open</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="action-group">
+            {% if not t.closed %}
+            <button class="btn btn-sm btn-danger" onclick="closeTicket('{{ t.channel_id }}')">Close</button>
+            <button class="btn btn-sm btn-primary" onclick="promptAdd('{{ t.channel_id }}')">+User</button>
+            <button class="btn btn-sm btn-outline" onclick="promptRemove('{{ t.channel_id }}')">-User</button>
+            {% else %}
+            <span style="font-size:12px;color:var(--text-muted);">—</span>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:30px;">No tickets found</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+async function closeTicket(channelId) {
+  if (!confirm('Close this ticket?')) return;
+  try {
+    const r = await fetch(`/tickets/${channelId}/close`, {method:'POST'});
+    const d = await r.json();
+    if (d.ok) location.reload();
+    else alert('Error: ' + d.message);
+  } catch(e) { alert('Request failed'); }
+}
+
+function promptAdd(channelId) {
+  const uid = prompt('Enter Discord User ID to add:');
+  if (!uid || !uid.match(/^\d+$/)) return alert('Invalid ID');
+  fetch(`/tickets/${channelId}/add`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({user_id: uid})
+  }).then(r=>r.json()).then(d=>{
+    if (d.ok) { alert(d.message); location.reload(); }
+    else alert('Error: ' + d.message);
+  }).catch(()=>alert('Request failed'));
+}
+
+function promptRemove(channelId) {
+  const uid = prompt('Enter Discord User ID to remove:');
+  if (!uid || !uid.match(/^\d+$/)) return alert('Invalid ID');
+  fetch(`/tickets/${channelId}/remove`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({user_id: uid})
+  }).then(r=>r.json()).then(d=>{
+    if (d.ok) { alert(d.message); location.reload(); }
+    else alert('Error: ' + d.message);
+  }).catch(()=>alert('Request failed'));
+}
+</script>
+{% endblock %}
