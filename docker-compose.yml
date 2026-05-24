@@ -3,8 +3,7 @@ services:
     build: .
     container_name: devcoder-privat-bot
     restart: unless-stopped
-    env_file:
-      - .env
+    # Environment variables are set in Portainer stack UI
     ports:
       - "6062:6062"
     volumes:
