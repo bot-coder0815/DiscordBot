@@ -9,6 +9,3 @@ services:
     volumes:
       - ./logs:/app/logs
       - ./transcripts:/app/transcripts
-      - ./dashboard/dashboard.db:/app/dashboard/dashboard.db
-      - ./tickets.json:/app/tickets.json
-      - ./daily_message_status.json:/app/daily_message_status.json
