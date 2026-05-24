@@ -1,5 +1,5 @@
 import time
-from typing import Optional
+from typing import Optional, Union
 
 import discord
 
@@ -12,6 +12,29 @@ from ui.embeds.translation_embed import build_translation_embed
 from ui.views.translation_view import TranslationView
 
 logger = setup_logger("translate_cog")
+
+
+class TranslateModal(discord.ui.Modal):
+    def __init__(
+        self, cog: "TranslateCog", target: Optional[str] = None
+    ) -> None:
+        super().__init__(title="Translate Text")
+        self.cog = cog
+        self.target = target
+        self.add_item(
+            discord.ui.InputText(
+                label="Text to translate",
+                style=discord.InputTextStyle.long,
+                placeholder="Paste or type your text here...",
+                required=True,
+                max_length=2000,
+            )
+        )
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        text = self.children[0].value
+        await interaction.response.defer(ephemeral=True)
+        await self.cog._perform_translation(interaction, text, self.target)
 
 
 class TranslateCog(discord.Cog):
@@ -37,36 +60,30 @@ class TranslateCog(discord.Cog):
         self._cooldowns[user_id] = now
         return None
 
-    @discord.slash_command(
-        name="tl",
-        description="Translate text into the configured target language.",
-    )
-    async def tl(
+    async def _perform_translation(
         self,
-        ctx: discord.ApplicationContext,
+        responder: Union[discord.ApplicationContext, discord.Interaction],
         text: str,
         target: Optional[str] = None,
     ) -> None:
-        await ctx.defer(ephemeral=True)
-
         try:
-            remaining = self._check_cooldown(ctx.author.id)
+            remaining = self._check_cooldown(responder.user.id)
             if remaining is not None:
-                await ctx.followup.send(
+                await responder.followup.send(
                     f"Please wait {remaining}s before using this command again.",
                     ephemeral=True,
                 )
                 return
 
             if not text or not text.strip():
-                await ctx.followup.send(
+                await responder.followup.send(
                     "Please provide text to translate.", ephemeral=True
                 )
                 return
 
             max_len = self.config.max_text_length
             if len(text) > max_len:
-                await ctx.followup.send(
+                await responder.followup.send(
                     f"Text is too long ({len(text)} chars). Maximum is {max_len} chars.",
                     ephemeral=True,
                 )
@@ -78,7 +95,9 @@ class TranslateCog(discord.Cog):
             if cached:
                 embed = build_translation_embed(cached)
                 view = TranslationView(cached.translated_text)
-                await ctx.followup.send(embed=embed, view=view, ephemeral=True)
+                await responder.followup.send(
+                    embed=embed, view=view, ephemeral=True
+                )
                 return
 
             result = await self.provider.translate(
@@ -91,19 +110,38 @@ class TranslateCog(discord.Cog):
             embed = build_translation_embed(result)
             view = TranslationView(result.translated_text)
 
-            await ctx.followup.send(embed=embed, view=view, ephemeral=True)
+            await responder.followup.send(
+                embed=embed, view=view, ephemeral=True
+            )
 
         except RuntimeError as e:
-            logger.error("Translation error for %s: %s", ctx.author, e)
-            await ctx.followup.send(
+            logger.error("Translation error for %s: %s", responder.user, e)
+            await responder.followup.send(
                 f"Translation failed: {e}", ephemeral=True
             )
         except Exception as e:
             logger.exception("Unexpected error in /tl: %s", e)
-            await ctx.followup.send(
+            await responder.followup.send(
                 "An unexpected error occurred. Please try again later.",
                 ephemeral=True,
             )
+
+    @discord.slash_command(
+        name="tl",
+        description="Translate text into the configured target language.",
+    )
+    async def tl(
+        self,
+        ctx: discord.ApplicationContext,
+        text: Optional[str] = None,
+        target: Optional[str] = None,
+    ) -> None:
+        if text:
+            await ctx.defer(ephemeral=True)
+            await self._perform_translation(ctx, text, target)
+        else:
+            modal = TranslateModal(self, target)
+            await ctx.send_modal(modal)
 
     @tl.error
     async def tl_error(
