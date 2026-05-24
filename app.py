@@ -1506,8 +1506,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from cogs.translate import TranslateCog
 from cogs.voice_admin import VoiceAdminCog
+from cogs.config_editor import ConfigEditorCog
 client.add_cog(TranslateCog(client))
 client.add_cog(VoiceAdminCog(client))
+client.add_cog(ConfigEditorCog(client))
 
 if not TOKEN:
     raise RuntimeError("TOKEN missing in the .env file.")
