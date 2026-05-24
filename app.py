@@ -781,7 +781,7 @@ class TicketCreateView(discord.ui.View):
         c = _ticket_config.ticket_created_embed
         embed = discord.Embed(
             title=c.title,
-            description=c.format_description(user_mention=interaction.user.mention),
+            description=c.format_description(user=interaction.user),
             color=c.color,
             timestamp=datetime.now()
         )
