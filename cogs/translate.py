@@ -133,19 +133,6 @@ class TranslateCog(discord.Cog):
     async def tl(
         self,
         ctx: discord.ApplicationContext,
-        text: str,
-        target: Optional[str] = None,
-    ) -> None:
-        await ctx.defer(ephemeral=True)
-        await self._perform_translation(ctx, text, target)
-
-    @discord.slash_command(
-        name="tlm",
-        description="Translate longer texts with multi-line support.",
-    )
-    async def tlm(
-        self,
-        ctx: discord.ApplicationContext,
         target: Optional[str] = None,
     ) -> None:
         modal = TranslateModal(self, target)
